@@ -1,5 +1,8 @@
+#include <SPI.h>
 #include <Adafruit_BMP280.h>
+#include <SD.h>
 
+#define CS 5
 
 Adafruit_BMP280 bmp = Adafruit_BMP280();
 
@@ -25,6 +28,9 @@ void setup() {
                 Adafruit_BMP280::STANDBY_MS_1);
 
   altIni = bmp.readAltitude(1013.25);
+
+  SD.begin(CS);
+  SD.open("/dados.txt", FILE_WRITE);
 
   qh_dadosAltitude = xQueueCreate(1024, sizeof(double));
 
@@ -69,5 +75,15 @@ void t_transmissaoDados(void *pvParameters){
   while(1){
     xQueueReceive(qh_dadosAltitude, &alt, portMAX_DELAY);
     Serial.println(alt);
+    
+    File arquivo = SD.open("/dados.txt", FILE_APPEND);
+
+    if(arquivo){
+      arquivo.print("sd corrompido: ");
+      arquivo.println(alt);
+      arquivo.close();
+    }else{
+      Serial.println("erro no arquivo");
+    }
   }
 }

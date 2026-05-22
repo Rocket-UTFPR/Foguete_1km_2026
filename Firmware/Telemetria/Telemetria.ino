@@ -11,6 +11,7 @@
 Adafruit_BMP280 bmp = Adafruit_BMP280();
 SPIClass hspi(HSPI);
 
+uint32_t pacotesPerdidos = 0;
 float altIni;
 TaskHandle_t th_captacaoDados = NULL, //Prefixo th_ para handles de tasks
              th_transmissaoDados = NULL;
@@ -70,11 +71,14 @@ void loop() {
 
 void t_captacaoDados(void *pvParameters){ //Prefixo t_ para tasks
   float alt = 0;
-  
+  BaseType_t xDadosFilaEnviados = pdFALSE;
+
   while(1){
     alt = bmp.readAltitude(1013.25) - altIni;
     
-    xQueueSend(qh_dadosAltitude, &alt, portMAX_DELAY);
+    xDadosFilaEnviados = xQueueSend(qh_dadosAltitude, &alt, portMAX_DELAY);
+
+    if(xDadosFilaEnviados == pdFALSE) pacotesPerdidos++;
   }
 }
 
@@ -82,6 +86,7 @@ void t_transmissaoDados(void *pvParameters){
   uint8_t fLoraDisponivel = 0; //Prefixo f para flags
   float alt = 0;
   BaseType_t xDadosFilaRecebidos = pdFALSE;
+  String fraseEnvio = "";
   File arquivo = File();
 
   while(1){
@@ -89,11 +94,12 @@ void t_transmissaoDados(void *pvParameters){
     Serial.println(alt);
     
     if(xDadosFilaRecebidos == pdTRUE){
+      fraseEnvio = String(alt) + ";" + String(pacotesPerdidos);
       arquivo = SD.open("/dados.txt", FILE_APPEND);
 
       if(arquivo){
         arquivo.print("sd corrompido: ");
-        arquivo.println(alt);
+        arquivo.println(fraseEnvio);
         arquivo.close();
       }else{
         Serial.println("erro no arquivo");
@@ -102,7 +108,7 @@ void t_transmissaoDados(void *pvParameters){
       fLoraDisponivel = LoRa.beginPacket();
       
       if(fLoraDisponivel == 1){
-        LoRa.println(alt);
+        LoRa.println(fraseEnvio);
         LoRa.endPacket();
       }
     }

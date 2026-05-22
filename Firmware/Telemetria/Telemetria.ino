@@ -1,6 +1,7 @@
 #include <SPI.h>
 #include <Adafruit_BMP280.h>
 #include <SD.h>
+#include <LoRa.h>
 
 #define CS 5
 
@@ -31,7 +32,7 @@ void setup() {
 
   SD.begin(CS);
   SD.open("/dados.txt", FILE_WRITE);
-
+  
   qh_dadosAltitude = xQueueCreate(1024, sizeof(double));
 
   xTaskCreatePinnedToCore(
@@ -71,19 +72,22 @@ void t_captacaoDados(void *pvParameters){ //Prefixo t_ para tasks
 
 void t_transmissaoDados(void *pvParameters){
   float alt = 0;
+  BaseType_t xDadosFilaRecebidos = pdFALSE;
 
   while(1){
-    xQueueReceive(qh_dadosAltitude, &alt, portMAX_DELAY);
+    xDadosFilaRecebidos = xQueueReceive(qh_dadosAltitude, &alt, portMAX_DELAY);
     Serial.println(alt);
     
-    File arquivo = SD.open("/dados.txt", FILE_APPEND);
+    if(xDadosFilaRecebidos == pdTRUE){
+      File arquivo = SD.open("/dados.txt", FILE_APPEND);
 
-    if(arquivo){
-      arquivo.print("sd corrompido: ");
-      arquivo.println(alt);
-      arquivo.close();
-    }else{
-      Serial.println("erro no arquivo");
+      if(arquivo){
+        arquivo.print("sd corrompido: ");
+        arquivo.println(alt);
+        arquivo.close();
+      }else{
+        Serial.println("erro no arquivo");
+      }
     }
   }
 }

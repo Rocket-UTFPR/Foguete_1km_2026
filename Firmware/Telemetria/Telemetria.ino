@@ -1,3 +1,48 @@
+/*******************************************************
+Código da placa principal do foguete de 1km para a LASC
+
+Código para ESP32 Dev Module
+
+Início: 2026/01
+Término: 
+
+Requisitos implementados:
+
+Aquisição de dados com BMP280
+Transmissão de dados com LoRa XL1278
+Gravação de dados com socket SDMMC
+
+Core 0: aquisição de sensores
+Core 1: transmissão via LoRa
+        gravação SD
+Escalonamento por afinidade implementado com FreeRTOS
+Comunicação por fila FreeRTOS
+
+To-do:
+
+Atualização de código OTA
+Captação e envio de dados GPS
+Core 0: Acionamento de paraquedas
+
+Atualização de código OTA será necessário, porque alguns
+pinos do socket do SD são usados como bootstrapping
+
+Convenções de nomenclatura:
+
+t_  : funções de tasks
+qh_ : handles de filas RTOS
+th_ : handles de tasks RTOS
+f   : flags booleanas
+x   : BaseTypes_t RTOS 
+
+Convenções para nomes de arquivos:
+
+/flight.txt : dados de voo/telemetria
+/wifi.txt   : credenciais wifi (NUNCA deixar hardcoded)
+/static.txt : dados de teste estático
+********************************************************/
+
+/*** Cabeçalho ***/
 #include <SPI.h>
 #include <Adafruit_BMP280.h>
 #include <LoRa.h>
@@ -8,16 +53,20 @@
 #define LORA_RST 16
 #define LORA_DIO0 26
 
-#define ERROR_LOG(msg) Serial.println(msg); return
+#define ERROR_LOG(msg) \
+   do{ \
+    Serial.println(msg); \
+    return; \
+   } while(0) //Do-while para evitar bugs
 
 Adafruit_BMP280 bmp = Adafruit_BMP280();
 SPIClass lora_spi(VSPI);
 
 uint32_t pacotesPerdidos = 0;
-float altIni;
-TaskHandle_t th_captacaoDados = NULL, //Prefixo th_ para handles de tasks
+float altIni = 0;
+TaskHandle_t th_captacaoDados = NULL,
              th_transmissaoDados = NULL;
-QueueHandle_t qh_dadosAltitude = NULL; //Prefixo qh_ para handles de queues
+QueueHandle_t qh_dadosAltitude = NULL;
 //Todo: queue do GPS depois de adicionar o módulo
 
 void t_captacaoDados(void);
@@ -40,6 +89,19 @@ void setup() {
   if(!SD_MMC.begin()){ ERROR_LOG("Erro: cartão SD não iniciado"); }
   arquivo = SD_MMC.open("/flight.txt", FILE_WRITE);
 
+  if(!arquivo){ ERROR_LOG("Erro: arquivo não aberto");}
+
+  /*************************** Tabela de alcance LoRa (empírica) ***************************
+  SF | BW (kHZ) | Velocidade aproximada (kbps) | Alcance campo aberto | Alcance urbano
+  6  | 500      |              ~25             |       500m - 1km     | 100m - 300m
+  7  | 125      |              ~9              |       1km - 2 km     | 300m - 800m
+  8  | 125      |              ~4.5            |       2km - 4km      | 400m - 1.2km
+  9  | 125      |              ~2              |       3km - 6km      | 500m - 2km
+  10 | 125      |              ~1              |       5km - 8km      | 700m - 3km
+  11 | 62.5     |              ~0.5            |       7km - 12km     | 1km - 4km
+  12 | 31.25    |              ~0.25           |      10km - 15+ km   | 2km - 5km
+  *************************** Usar para configurar parâmetros LoRa *************************/
+
   LoRa.setSPI(lora_spi);
   LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
   if(!LoRa.begin(915e6)){ ERROR_LOG("Erro: LoRa não iniciado"); }
@@ -47,7 +109,7 @@ void setup() {
   LoRa.setSpreadingFactor(11);
   LoRa.setSignalBandwidth(62.5e3);
 
-  qh_dadosAltitude = xQueueCreate(1024, sizeof(double));
+  qh_dadosAltitude = xQueueCreate(1024, sizeof(float));
 
   if(xTaskCreatePinnedToCore(
     t_captacaoDados,
@@ -78,7 +140,10 @@ void loop() {
   
 }
 
-void t_captacaoDados(void *pvParameters){ //Prefixo t_ para tasks
+/*** Declaração de tasks ***/
+
+/*** Task de captação de dados ***/
+void t_captacaoDados(void *pvParameters){
   float alt = 0;
   BaseType_t xDadosFilaEnviados = pdFALSE;
 
@@ -91,11 +156,12 @@ void t_captacaoDados(void *pvParameters){ //Prefixo t_ para tasks
   }
 }
 
+/*** Task de transmissão e gravação ***/
 void t_transmissaoDados(void *pvParameters){
-  uint8_t fLoraDisponivel = 0; //Prefixo f para flags
+  uint8_t fLoraDisponivel = 0;
   float alt = 0;
   BaseType_t xDadosFilaRecebidos = pdFALSE;
-  String fraseEnvio = "";
+  String payloadTelemetria = "";
   File arquivo = File();
 
   while(1){
@@ -103,12 +169,12 @@ void t_transmissaoDados(void *pvParameters){
     Serial.println(alt);
     
     if(xDadosFilaRecebidos == pdTRUE){
-      fraseEnvio = String(alt) + ";" + String(pacotesPerdidos);
+      payloadTelemetria = String(alt) + ";" + String(pacotesPerdidos);
       arquivo = SD_MMC.open("/flight.txt", FILE_APPEND);
 
       if(arquivo){
         arquivo.print("sd corrompido: ");
-        arquivo.println(fraseEnvio);
+        arquivo.println(payloadTelemetria);
         arquivo.close();
       }else{
         Serial.println("Erro: arquivo não aberto");
@@ -117,7 +183,7 @@ void t_transmissaoDados(void *pvParameters){
       fLoraDisponivel = LoRa.beginPacket();
       
       if(fLoraDisponivel == 1){
-        LoRa.println(fraseEnvio);
+        LoRa.println(payloadTelemetria);
         LoRa.endPacket();
       } else{
         Serial.println("LoRa indisponível");

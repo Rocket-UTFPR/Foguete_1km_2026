@@ -1,15 +1,17 @@
 #include <SPI.h>
 #include <Adafruit_BMP280.h>
-#include <SD.h>
 #include <LoRa.h>
+#include "SD_MMC.h"
+#include "FS.h"
 
-#define SD_CS 5
-#define LORA_SS 15 //Mudar depois
-#define LORA_RST 14 //Mudar depois
-#define LORA_DIO0 2 //Mudar depois
+#define LORA_SS 5 
+#define LORA_RST 16
+#define LORA_DIO0 26
+
+#define ERROR_LOG(msg) Serial.println(msg); return
 
 Adafruit_BMP280 bmp = Adafruit_BMP280();
-SPIClass hspi(HSPI);
+SPIClass lora_spi(VSPI);
 
 uint32_t pacotesPerdidos = 0;
 float altIni;
@@ -22,29 +24,32 @@ void t_captacaoDados(void);
 void t_transmissaoDados(void);
 
 void setup() {
+  File arquivo = File();
+
   Serial.begin(115200);
 
-  bmp.begin(0x76);
+  if(!bmp.begin(0x76)){ ERROR_LOG("Erro: BMP não iniciado"); }
+
   bmp.setSampling(Adafruit_BMP280::MODE_NORMAL, // modo de operação
                 Adafruit_BMP280::SAMPLING_X2, // temperatura
                 Adafruit_BMP280::SAMPLING_X16, // pressão
                 Adafruit_BMP280::FILTER_X16, //filtro de correção de dados
                 Adafruit_BMP280::STANDBY_MS_1);
   altIni = bmp.readAltitude(1013.25);
-
-  SD.begin(SD_CS);
-  SD.open("/dados.txt", FILE_WRITE);
   
-  LoRa.setSPI(hspi);
+  if(!SD_MMC.begin()){ ERROR_LOG("Erro: cartão SD não iniciado"); }
+  arquivo = SD_MMC.open("/flight.txt", FILE_WRITE);
+
+  LoRa.setSPI(lora_spi);
   LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
-  LoRa.begin(915e6);
+  if(!LoRa.begin(915e6)){ ERROR_LOG("Erro: LoRa não iniciado"); }
   LoRa.setSyncWord(0xFE);
   LoRa.setSpreadingFactor(11);
   LoRa.setSignalBandwidth(62.5e3);
 
   qh_dadosAltitude = xQueueCreate(1024, sizeof(double));
 
-  xTaskCreatePinnedToCore(
+  if(xTaskCreatePinnedToCore(
     t_captacaoDados,
     "Captacao de dados",
     5000,
@@ -52,9 +57,11 @@ void setup() {
     1,
     &th_captacaoDados,
     0
-  );
+  ) == pdFALSE){ 
+    ERROR_LOG("Erro: task \'Captacao de dados\' não iniciada"); 
+  }
 
-  xTaskCreatePinnedToCore(
+  if(xTaskCreatePinnedToCore(
     t_transmissaoDados,
     "Transmissao de dados",
     6000,
@@ -62,7 +69,9 @@ void setup() {
     1,
     &th_transmissaoDados,
     1
-  );
+  ) == pdFALSE){ 
+    ERROR_LOG("Erro: task \'Trasmissao de dados\' não iniciada");
+  }
 }
 
 void loop() {
@@ -95,14 +104,14 @@ void t_transmissaoDados(void *pvParameters){
     
     if(xDadosFilaRecebidos == pdTRUE){
       fraseEnvio = String(alt) + ";" + String(pacotesPerdidos);
-      arquivo = SD.open("/dados.txt", FILE_APPEND);
+      arquivo = SD_MMC.open("/flight.txt", FILE_APPEND);
 
       if(arquivo){
         arquivo.print("sd corrompido: ");
         arquivo.println(fraseEnvio);
         arquivo.close();
       }else{
-        Serial.println("erro no arquivo");
+        Serial.println("Erro: arquivo não aberto");
       }
 
       fLoraDisponivel = LoRa.beginPacket();
@@ -110,6 +119,8 @@ void t_transmissaoDados(void *pvParameters){
       if(fLoraDisponivel == 1){
         LoRa.println(fraseEnvio);
         LoRa.endPacket();
+      } else{
+        Serial.println("LoRa indisponível");
       }
     }
   }

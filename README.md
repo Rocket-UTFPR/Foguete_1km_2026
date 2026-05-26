@@ -17,7 +17,7 @@ Requisitos Não-Funcionais
 |RNF05 |Todos os componentes não passivos da placa devem ser SMD                                                 |Média|
 |RNF06 |O sistema deve operar no mínimo 2h sem carga                                                             |Média|
 |RNF07 |O alcance da comunicação LoRa deve ser de, no mímino,5km em campo aberto                                 |Alta |
-
+|RNF08 |O conversor CC-CC não isolado deve ser buck ou Ćuk, projetado pela própria equipe                        |Baixa|
 
 Requisitos Funcionais
 
@@ -31,3 +31,4 @@ Requisitos Funcionais
 |RF06 | A placa de circuito impresso deve ter botões de reset e boot                                      |Média |
 |RF07 | A bateria deve ser conectada à PCB por um RBF (Remove Before Flight)                              |Alta  |
 |RF08 | O microcontrolador deve medir dados de altitude por barômetro e captar localização por GPS        |Alta  |
+|RF09 | Um conversor CC-CC não isolado deve interfacear a bateria com o sistema, tensão de saída de 5V    |Alta  |

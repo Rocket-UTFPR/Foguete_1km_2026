@@ -33,7 +33,7 @@ t_  : funções de tasks
 qh_ : handles de filas RTOS
 th_ : handles de tasks RTOS
 f   : flags booleanas
-x   : BaseTypes_t RTOS 
+x   : BaseType_t RTOS 
 
 Convenções para nomes de arquivos:
 
@@ -142,7 +142,6 @@ void loop() {
 
 /*** Declaração de tasks ***/
 
-/*** Task de captação de dados ***/
 void t_captacaoDados(void *pvParameters){
   float alt = 0;
   BaseType_t xDadosFilaEnviados = pdFALSE;
@@ -156,7 +155,6 @@ void t_captacaoDados(void *pvParameters){
   }
 }
 
-/*** Task de transmissão e gravação ***/
 void t_transmissaoDados(void *pvParameters){
   uint8_t fLoraDisponivel = 0;
   float alt = 0;

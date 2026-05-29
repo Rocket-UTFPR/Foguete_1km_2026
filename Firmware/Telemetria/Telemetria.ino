@@ -54,17 +54,18 @@ Convenções para nomes de arquivos:
 #define LORA_SS 5 
 #define LORA_RST 16
 #define LORA_DIO0 26
+#define GPS_RX 17 // RX da UART, TX do GPS
+#define GPS_TX 4 // TX da UART, RX da GPS
 
 #define ERROR_LOG(msg) \
    do{ \
     Serial.println(msg); \
-    return; \
    } while(0) //Do-while para evitar bugs
 
 Adafruit_BMP280 bmp = Adafruit_BMP280();
 SPIClass lora_spi(VSPI);
 TinyGPSPlus gps;
-HardwareSerial gps_ss(2);
+HardwareSerial gpsSerial(2);
 
 uint32_t pacotesPerdidos = 0;
 float altIni = 0;
@@ -88,17 +89,17 @@ void setup() {
 
   Serial.begin(115200);
 
-  gps_ss.begin(115200);
+  gpsSerial.begin(9600, SERIAL_8N1, GPS_RX, GPS_TX);
 
-  if(!bmp.begin(0x76)){ ERROR_LOG("Erro: BMP não iniciado"); }
-
-  bmp.setSampling(Adafruit_BMP280::MODE_NORMAL, // modo de operação
-                Adafruit_BMP280::SAMPLING_X2, // temperatura
-                Adafruit_BMP280::SAMPLING_X16, // pressão
-                Adafruit_BMP280::FILTER_X16, //filtro de correção de dados
-                Adafruit_BMP280::STANDBY_MS_1);
-  altIni = bmp.readAltitude(1013.25);
-  
+  if(!bmp.begin(0x76)) ERROR_LOG("Erro: BMP não iniciado");
+  else{
+    bmp.setSampling(Adafruit_BMP280::MODE_NORMAL, // modo de operação
+                  Adafruit_BMP280::SAMPLING_X2, // temperatura
+                  Adafruit_BMP280::SAMPLING_X16, // pressão
+                  Adafruit_BMP280::FILTER_X16, //filtro de correção de dados
+                  Adafruit_BMP280::STANDBY_MS_1);
+    altIni = bmp.readAltitude(1013.25);
+  }
   if(!SD_MMC.begin()){ ERROR_LOG("Erro: cartão SD não iniciado"); }
   arquivo = SD_MMC.open("/flight.txt", FILE_WRITE);
 
@@ -156,15 +157,18 @@ void loop() {
 /*** Declaração de tasks ***/
 
 void t_captacaoDados(void *pvParameters){
-  dadosTelemetria dados;
+  dadosTelemetria dados = {0};
   BaseType_t xDadosFilaEnviados = pdFALSE;
 
   while(1){
     dados.altitude = bmp.readAltitude(1013.25) - altIni;
     
-    if(gps_ss.available()){
-      if(gps.encode(gps_ss.read())){
+    if(gpsSerial.available()){
+      Serial.println("porta recebeu");
+      if(gps.encode(gpsSerial.read())){
+        Serial.println("String válida lida");
         if(gps.location.isValid()){
+          Serial.println("location valid");
           dados.latitude = gps.location.lat();
           dados.longitude = gps.location.lng();
         }
@@ -195,7 +199,7 @@ void t_transmissaoDados(void *pvParameters){
                           + String(dados.latitude) + ";"
                           + String(dados.longitude) + ";"
                           + String(pacotesPerdidos);
-      arquivo = SD_MMC.open("/flight.txt", FILE_APPEND);
+    arquivo = SD_MMC.open("/flight.txt", FILE_APPEND);
 
       if(arquivo){
         arquivo.println(payloadTelemetria);

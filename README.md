@@ -14,3 +14,7 @@ Segue abaixo especificações dos requisitos
 |RF03 |A implementação deve fazer uso do sistema operacional FreeRTOS                                           |Alta |
 |RF04 |Deve haver uma task para captação de dados e acionamento de paraquedas e uma para gravação e transmissão |Alta |
 |RF05 |Todos os componentes não passivos da placa devem ser SMD                                                 |Média|
+
+# 2. Medidas da Placa
+- Diâmetro (máximo): 98mm
+- Comprimento (máximo): 230mm

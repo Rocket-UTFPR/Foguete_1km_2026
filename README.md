@@ -49,3 +49,8 @@ Requisitos Funcionais
 |RFS01 | O microcontrolador deve acionar paraquedas após apogeu                                                  |Alta  |
 |RFS02 | Deve ser possível gravar código OTA, com página web estilizada                                          |Média |
 |RFS03 | Deve haver um wifi-manager que permita ao usuario enviar credenciais de wifi em tempo de execução       |Média |
+
+# 2. Medidas da Placa
+- Diâmetro (máximo): 98mm
+- Comprimento (máximo): 230mm
+

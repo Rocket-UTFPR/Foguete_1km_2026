@@ -54,8 +54,8 @@ Convenções para nomes de arquivos:
 #define LORA_SS 5 
 #define LORA_RST 16
 #define LORA_DIO0 26
-#define GPS_RX 17 // RX da UART, TX do GPS
-#define GPS_TX 4 // TX da UART, RX da GPS
+#define GPS_RX 17 // RX do ESP, TX do GPS
+#define GPS_TX 4 // TX do ESP, RX da GPS
 
 #define ERROR_LOG(msg) \
    do{ \
@@ -74,6 +74,7 @@ struct dadosTelemetria{
   float altitude;
   double latitude,
           longitude;
+  bool newGpsData;
 };
 
 TaskHandle_t th_captacaoDados = NULL,
@@ -157,13 +158,15 @@ void loop() {
 /*** Declaração de tasks ***/
 
 void t_captacaoDados(void *pvParameters){
-  dadosTelemetria dados = {0};
+  dadosTelemetria dados = {};
   BaseType_t xDadosFilaEnviados = pdFALSE;
 
   while(1){
     dados.altitude = bmp.readAltitude(1013.25) - altIni;
     
-    if(gpsSerial.available()){
+    dados.newGpsData = false;
+
+    while(gpsSerial.available()){
       Serial.println("porta recebeu");
       if(gps.encode(gpsSerial.read())){
         Serial.println("String válida lida");
@@ -171,6 +174,7 @@ void t_captacaoDados(void *pvParameters){
           Serial.println("location valid");
           dados.latitude = gps.location.lat();
           dados.longitude = gps.location.lng();
+          dados.newGpsData = true;
         }
       }
     }
@@ -178,6 +182,8 @@ void t_captacaoDados(void *pvParameters){
     xDadosFilaEnviados = xQueueSend(qh_dadosAltitude, &dados, portMAX_DELAY);
 
     if(xDadosFilaEnviados == pdFALSE) pacotesPerdidos++;
+
+    vTaskDelay(pdMS_TO_TICKS(20));
   }
 }
 

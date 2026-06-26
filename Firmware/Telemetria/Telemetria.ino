@@ -43,27 +43,40 @@ Convenções para nomes de arquivos:
 ********************************************************/
 
 /*** Cabeçalho ***/
+#include <HardwareSerial.h>
 #include <SPI.h>
 #include <Adafruit_BMP280.h>
 #include <LoRa.h>
+#include <TinyGPSPlus.h>
 #include "SD_MMC.h"
 #include "FS.h"
 
 #define LORA_SS 5 
 #define LORA_RST 16
 #define LORA_DIO0 26
+#define GPS_RX 17 // RX do ESP, TX do GPS
+#define GPS_TX 4 // TX do ESP, RX da GPS
 
 #define ERROR_LOG(msg) \
    do{ \
     Serial.println(msg); \
-    return; \
    } while(0) //Do-while para evitar bugs
 
 Adafruit_BMP280 bmp = Adafruit_BMP280();
 SPIClass lora_spi(VSPI);
+TinyGPSPlus gps;
+HardwareSerial gpsSerial(2);
 
 uint32_t pacotesPerdidos = 0;
 float altIni = 0;
+
+struct dadosTelemetria{
+  float altitude;
+  double latitude,
+          longitude;
+  bool newGpsData;
+};
+
 TaskHandle_t th_captacaoDados = NULL,
              th_transmissaoDados = NULL;
 QueueHandle_t qh_dadosAltitude = NULL;
@@ -77,15 +90,17 @@ void setup() {
 
   Serial.begin(115200);
 
-  if(!bmp.begin(0x76)){ ERROR_LOG("Erro: BMP não iniciado"); }
+  gpsSerial.begin(9600, SERIAL_8N1, GPS_RX, GPS_TX);
 
-  bmp.setSampling(Adafruit_BMP280::MODE_NORMAL, // modo de operação
-                Adafruit_BMP280::SAMPLING_X2, // temperatura
-                Adafruit_BMP280::SAMPLING_X16, // pressão
-                Adafruit_BMP280::FILTER_X16, //filtro de correção de dados
-                Adafruit_BMP280::STANDBY_MS_1);
-  altIni = bmp.readAltitude(1013.25);
-  
+  if(!bmp.begin(0x76)) ERROR_LOG("Erro: BMP não iniciado");
+  else{
+    bmp.setSampling(Adafruit_BMP280::MODE_NORMAL, // modo de operação
+                  Adafruit_BMP280::SAMPLING_X2, // temperatura
+                  Adafruit_BMP280::SAMPLING_X16, // pressão
+                  Adafruit_BMP280::FILTER_X16, //filtro de correção de dados
+                  Adafruit_BMP280::STANDBY_MS_1);
+    altIni = bmp.readAltitude(1013.25);
+  }
   if(!SD_MMC.begin()){ ERROR_LOG("Erro: cartão SD não iniciado"); }
   arquivo = SD_MMC.open("/flight.txt", FILE_WRITE);
 
@@ -109,7 +124,7 @@ void setup() {
   LoRa.setSpreadingFactor(11);
   LoRa.setSignalBandwidth(62.5e3);
 
-  qh_dadosAltitude = xQueueCreate(1024, sizeof(float));
+  qh_dadosAltitude = xQueueCreate(1024, sizeof(dadosTelemetria));
 
   if(xTaskCreatePinnedToCore(
     t_captacaoDados,
@@ -143,35 +158,56 @@ void loop() {
 /*** Declaração de tasks ***/
 
 void t_captacaoDados(void *pvParameters){
-  float alt = 0;
+  dadosTelemetria dados = {};
   BaseType_t xDadosFilaEnviados = pdFALSE;
 
   while(1){
-    alt = bmp.readAltitude(1013.25) - altIni;
+    dados.altitude = bmp.readAltitude(1013.25) - altIni;
     
-    xDadosFilaEnviados = xQueueSend(qh_dadosAltitude, &alt, portMAX_DELAY);
+    dados.newGpsData = false;
+
+    while(gpsSerial.available()){
+      Serial.println("porta recebeu");
+      if(gps.encode(gpsSerial.read())){
+        Serial.println("String válida lida");
+        if(gps.location.isValid()){
+          Serial.println("location valid");
+          dados.latitude = gps.location.lat();
+          dados.longitude = gps.location.lng();
+          dados.newGpsData = true;
+        }
+      }
+    }
+
+    xDadosFilaEnviados = xQueueSend(qh_dadosAltitude, &dados, portMAX_DELAY);
 
     if(xDadosFilaEnviados == pdFALSE) pacotesPerdidos++;
+
+    vTaskDelay(pdMS_TO_TICKS(20));
   }
 }
 
 void t_transmissaoDados(void *pvParameters){
   uint8_t fLoraDisponivel = 0;
-  float alt = 0;
+  dadosTelemetria dados;
   BaseType_t xDadosFilaRecebidos = pdFALSE;
   String payloadTelemetria = "";
   File arquivo = File();
 
   while(1){
-    xDadosFilaRecebidos = xQueueReceive(qh_dadosAltitude, &alt, portMAX_DELAY);
-    Serial.println(alt);
-    
+    xDadosFilaRecebidos = xQueueReceive(qh_dadosAltitude, &dados, portMAX_DELAY);
+    Serial.println(dados.altitude);
+    Serial.println(dados.longitude);
+    Serial.println(dados.latitude);
+
     if(xDadosFilaRecebidos == pdTRUE){
-      payloadTelemetria = String(alt) + ";" + String(pacotesPerdidos);
-      arquivo = SD_MMC.open("/flight.txt", FILE_APPEND);
+      payloadTelemetria = String(dados.altitude) + ";" 
+                          + String(dados.latitude) + ";"
+                          + String(dados.longitude) + ";"
+                          + String(pacotesPerdidos);
+    arquivo = SD_MMC.open("/flight.txt", FILE_APPEND);
 
       if(arquivo){
-        arquivo.print("sd corrompido: ");
         arquivo.println(payloadTelemetria);
         arquivo.close();
       }else{

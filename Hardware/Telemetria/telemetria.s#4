@@ -9688,7 +9688,7 @@ que contém o CI LoRa SX1276/78, do mesmo fabricante.</description>
 <attribute name="NAME" x="156.464" y="-15.875" size="1.778" layer="95" rot="R180"/>
 <attribute name="VALUE" x="159.004" y="-8.509" size="1.778" layer="96" rot="R180"/>
 </instance>
-<instance part="U$3" gate="G$1" x="292.1" y="5.08" smashed="yes"/>
+<instance part="U$3" gate="G$1" x="279.4" y="2.54" smashed="yes"/>
 </instances>
 <busses>
 </busses>
@@ -10203,9 +10203,6 @@ que contém o CI LoRa SX1276/78, do mesmo fabricante.</description>
 <approved hash="104,1,45.72,66.04,U3,VCC,3V3,,,"/>
 <approved hash="104,1,236.22,83.82,IC1,VDD,3V3,,,"/>
 <approved hash="104,1,266.7,83.82,IC1,VDDIO,3V3,,,"/>
-<approved hash="113,1,-45.72,106.385,BOOT,,,,,"/>
-<approved hash="113,1,-45.72,65.7454,RST,,,,,"/>
-<approved hash="113,1,-46.3973,-1.19634,J1,,,,,"/>
 </errors>
 </schematic>
 </drawing>

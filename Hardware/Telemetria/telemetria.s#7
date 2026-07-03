@@ -9308,7 +9308,7 @@ que contém o CI LoRa SX1276/78, do mesmo fabricante.</description>
 </symbol>
 </symbols>
 <devicesets>
-<deviceset name="LORA">
+<deviceset name="LORA" uservalue="yes">
 <gates>
 <gate name="G$1" symbol="LORAXL1276/78" x="12.7" y="5.08"/>
 </gates>
@@ -9349,12 +9349,12 @@ que contém o CI LoRa SX1276/78, do mesmo fabricante.</description>
 </classes>
 <parts>
 <part name="U1" library="esp32" deviceset="ESP-WROOM-32" device=""/>
-<part name="BOOT" library="SparkFun-Retired" library_urn="urn:adsk.eagle:library:533" deviceset="TAC_SWITCH" device="PTH" package3d_urn="urn:adsk.eagle:package:41385990/1"/>
+<part name="BOOT" library="SparkFun-Retired" library_urn="urn:adsk.eagle:library:533" deviceset="TAC_SWITCH" device="PTH" package3d_urn="urn:adsk.eagle:package:41385990/1" value="BOOT"/>
 <part name="C1" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="C-US" device="C3216" package3d_urn="urn:adsk.eagle:package:6240328/1" value="1u"/>
 <part name="R1" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="R-US_" device="R1206" package3d_urn="urn:adsk.eagle:package:6240569/1" value="1k"/>
 <part name="R2" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="R-US_" device="R1206" package3d_urn="urn:adsk.eagle:package:6240569/1" value="10k"/>
 <part name="U2" library="SN74LVC1G17" deviceset="SN74LVC1G17-Q1_DCK_5" device="DCK5_TEX-L"/>
-<part name="RST" library="SparkFun-Retired" library_urn="urn:adsk.eagle:library:533" deviceset="TAC_SWITCH" device="PTH" package3d_urn="urn:adsk.eagle:package:41385990/1"/>
+<part name="RST" library="SparkFun-Retired" library_urn="urn:adsk.eagle:library:533" deviceset="TAC_SWITCH" device="PTH" package3d_urn="urn:adsk.eagle:package:41385990/1" value="RST"/>
 <part name="C2" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="C-US" device="C3216" package3d_urn="urn:adsk.eagle:package:6240328/1" value="1u"/>
 <part name="R3" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="R-US_" device="R1206" package3d_urn="urn:adsk.eagle:package:6240569/1" value="1k"/>
 <part name="R4" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="R-US_" device="R1206" package3d_urn="urn:adsk.eagle:package:6240569/1" value="10k"/>
@@ -9378,7 +9378,7 @@ que contém o CI LoRa SX1276/78, do mesmo fabricante.</description>
 <part name="C6" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="C-US" device="C3216" package3d_urn="urn:adsk.eagle:package:6240328/1" value="22pF"/>
 <part name="C7" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="C-US" device="C3216" package3d_urn="urn:adsk.eagle:package:6240328/1" value="22pF"/>
 <part name="SUPPLY12" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
-<part name="J1" library="SparkFun-Connectors" deviceset="USB_C" device="_2-LAYER_PADS"/>
+<part name="J1" library="SparkFun-Connectors" deviceset="USB_C" device="_2-LAYER_PADS" value="J1"/>
 <part name="SUPPLY13" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="R5" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="R-US_" device="R1206" package3d_urn="urn:adsk.eagle:package:6240569/1" value="5k1"/>
 <part name="R6" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="R-US_" device="R1206" package3d_urn="urn:adsk.eagle:package:6240569/1" value="5k1"/>
@@ -9390,7 +9390,7 @@ que contém o CI LoRa SX1276/78, do mesmo fabricante.</description>
 <part name="C10" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="C-US" device="C3216" package3d_urn="urn:adsk.eagle:package:6240328/1" value="100n"/>
 <part name="R7" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="R-US_" device="R1206" package3d_urn="urn:adsk.eagle:package:6240569/1" value="1k"/>
 <part name="R8" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="R-US_" device="R1206" package3d_urn="urn:adsk.eagle:package:6240569/1" value="1k"/>
-<part name="U$2" library="lora-xl1276-8" deviceset="LORA" device=""/>
+<part name="U$2" library="lora-xl1276-8" deviceset="LORA" device="" value="LORA"/>
 <part name="SUPPLY16" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY17" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY18" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
@@ -9494,7 +9494,7 @@ que contém o CI LoRa SX1276/78, do mesmo fabricante.</description>
 <attribute name="VALUE" x="156.845" y="114.935" size="1.778" layer="96" rot="R180"/>
 </instance>
 <instance part="SUPPLY9" gate="GND" x="106.68" y="111.76" smashed="yes" rot="R270">
-<attribute name="VALUE" x="103.505" y="113.665" size="1.778" layer="96" rot="R270"/>
+<attribute name="VALUE" x="104.775" y="113.665" size="1.778" layer="96"/>
 </instance>
 <instance part="C4" gate="G$1" x="93.98" y="116.84" smashed="yes" rot="R270">
 <attribute name="NAME" x="97.155" y="113.284" size="1.778" layer="95" rot="R270"/>
@@ -9571,21 +9571,21 @@ que contém o CI LoRa SX1276/78, do mesmo fabricante.</description>
 <attribute name="NAME" x="275.3614" y="54.61" size="1.778" layer="95" rot="R90"/>
 <attribute name="VALUE" x="280.162" y="54.61" size="1.778" layer="96" rot="R90"/>
 </instance>
-<instance part="U$2" gate="G$1" x="137.16" y="0" smashed="yes">
-<attribute name="NAME" x="132.08" y="17.78" size="1.778" layer="94"/>
+<instance part="U$2" gate="G$1" x="119.38" y="-2.54" smashed="yes">
+<attribute name="NAME" x="114.3" y="15.24" size="1.778" layer="94"/>
 </instance>
-<instance part="SUPPLY16" gate="GND" x="111.76" y="12.7" smashed="yes" rot="R270">
-<attribute name="VALUE" x="108.585" y="14.605" size="1.778" layer="96" rot="R270"/>
+<instance part="SUPPLY16" gate="GND" x="93.98" y="-20.32" smashed="yes" rot="R270">
+<attribute name="VALUE" x="90.805" y="-18.415" size="1.778" layer="96" rot="R270"/>
 </instance>
-<instance part="SUPPLY17" gate="GND" x="111.76" y="-17.78" smashed="yes" rot="R270">
-<attribute name="VALUE" x="108.585" y="-15.875" size="1.778" layer="96" rot="R270"/>
+<instance part="SUPPLY17" gate="GND" x="93.98" y="10.16" smashed="yes" rot="R270">
+<attribute name="VALUE" x="90.805" y="12.065" size="1.778" layer="96" rot="R270"/>
 </instance>
-<instance part="SUPPLY18" gate="GND" x="180.34" y="2.54" smashed="yes" rot="R90">
-<attribute name="VALUE" x="183.515" y="0.635" size="1.778" layer="96" rot="R90"/>
+<instance part="SUPPLY18" gate="GND" x="175.26" y="0" smashed="yes" rot="R90">
+<attribute name="VALUE" x="178.435" y="-1.905" size="1.778" layer="96" rot="R90"/>
 </instance>
-<instance part="C11" gate="G$1" x="175.26" y="-7.62" smashed="yes" rot="R180">
-<attribute name="NAME" x="181.864" y="-5.715" size="1.778" layer="95" rot="R180"/>
-<attribute name="VALUE" x="181.864" y="-3.429" size="1.778" layer="96" rot="R180"/>
+<instance part="C11" gate="G$1" x="162.56" y="-10.16" smashed="yes" rot="R180">
+<attribute name="NAME" x="159.004" y="-13.335" size="1.778" layer="95" rot="R180"/>
+<attribute name="VALUE" x="161.544" y="-5.969" size="1.778" layer="96" rot="R180"/>
 </instance>
 </instances>
 <busses>
@@ -9687,12 +9687,12 @@ que contém o CI LoRa SX1276/78, do mesmo fabricante.</description>
 </segment>
 <segment>
 <pinref part="U$2" gate="G$1" pin="VCC"/>
-<wire x1="157.48" y1="-12.7" x2="175.26" y2="-12.7" width="0.1524" layer="91"/>
-<label x="180.34" y="-12.7" size="1.778" layer="95"/>
+<wire x1="139.7" y1="-15.24" x2="162.56" y2="-15.24" width="0.1524" layer="91"/>
 <pinref part="C11" gate="G$1" pin="1"/>
-<wire x1="175.26" y1="-12.7" x2="180.34" y2="-12.7" width="0.1524" layer="91"/>
-<wire x1="175.26" y1="-10.16" x2="175.26" y2="-12.7" width="0.1524" layer="91"/>
-<junction x="175.26" y="-12.7"/>
+<wire x1="162.56" y1="-15.24" x2="172.72" y2="-15.24" width="0.1524" layer="91"/>
+<wire x1="162.56" y1="-12.7" x2="162.56" y2="-15.24" width="0.1524" layer="91"/>
+<junction x="162.56" y="-15.24"/>
+<label x="172.72" y="-15.24" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$2" class="0">
@@ -9831,25 +9831,25 @@ que contém o CI LoRa SX1276/78, do mesmo fabricante.</description>
 <junction x="269.24" y="73.66"/>
 </segment>
 <segment>
-<pinref part="U$2" gate="G$1" pin="GND"/>
 <pinref part="SUPPLY16" gate="GND" pin="GND"/>
-<wire x1="114.3" y1="12.7" x2="116.84" y2="12.7" width="0.1524" layer="91"/>
-</segment>
-<segment>
 <pinref part="U$2" gate="G$1" pin="GND1"/>
-<pinref part="SUPPLY17" gate="GND" pin="GND"/>
-<wire x1="114.3" y1="-17.78" x2="116.84" y2="-17.78" width="0.1524" layer="91"/>
+<wire x1="96.52" y1="-20.32" x2="99.06" y2="-20.32" width="0.1524" layer="91"/>
 </segment>
 <segment>
-<pinref part="U$2" gate="G$1" pin="GND2"/>
-<wire x1="157.48" y1="-7.62" x2="170.18" y2="-7.62" width="0.1524" layer="91"/>
-<wire x1="170.18" y1="-7.62" x2="170.18" y2="2.54" width="0.1524" layer="91"/>
-<pinref part="SUPPLY18" gate="GND" pin="GND"/>
-<wire x1="170.18" y1="2.54" x2="175.26" y2="2.54" width="0.1524" layer="91"/>
+<pinref part="SUPPLY17" gate="GND" pin="GND"/>
+<pinref part="U$2" gate="G$1" pin="GND"/>
+<wire x1="96.52" y1="10.16" x2="99.06" y2="10.16" width="0.1524" layer="91"/>
+</segment>
+<segment>
 <pinref part="C11" gate="G$1" pin="2"/>
-<wire x1="175.26" y1="2.54" x2="177.8" y2="2.54" width="0.1524" layer="91"/>
-<wire x1="175.26" y1="-2.54" x2="175.26" y2="2.54" width="0.1524" layer="91"/>
-<junction x="175.26" y="2.54"/>
+<pinref part="U$2" gate="G$1" pin="GND2"/>
+<wire x1="139.7" y1="-10.16" x2="154.94" y2="-10.16" width="0.1524" layer="91"/>
+<wire x1="154.94" y1="-10.16" x2="154.94" y2="0" width="0.1524" layer="91"/>
+<wire x1="154.94" y1="0" x2="162.56" y2="0" width="0.1524" layer="91"/>
+<wire x1="162.56" y1="0" x2="172.72" y2="0" width="0.1524" layer="91"/>
+<wire x1="162.56" y1="-5.08" x2="162.56" y2="0" width="0.1524" layer="91"/>
+<junction x="162.56" y="0"/>
+<pinref part="SUPPLY18" gate="GND" pin="GND"/>
 </segment>
 </net>
 <net name="RST" class="0">
@@ -10015,23 +10015,11 @@ que contém o CI LoRa SX1276/78, do mesmo fabricante.</description>
 <label x="149.86" y="106.68" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
-<net name="MISO" class="0">
-<segment>
-<pinref part="U$2" gate="G$1" pin="MISO"/>
-<wire x1="157.48" y1="-2.54" x2="160.02" y2="-2.54" width="0.1524" layer="91"/>
-<label x="160.02" y="-2.54" size="1.27" layer="95" xref="yes"/>
-</segment>
-<segment>
-<pinref part="U1" gate="G$1" pin="IO19"/>
-<wire x1="144.78" y1="93.98" x2="149.86" y2="93.98" width="0.1524" layer="91"/>
-<label x="149.86" y="93.98" size="1.27" layer="95" xref="yes"/>
-</segment>
-</net>
 <net name="MOSI" class="0">
 <segment>
 <pinref part="U$2" gate="G$1" pin="MOSI"/>
-<wire x1="157.48" y1="2.54" x2="160.02" y2="2.54" width="0.1524" layer="91"/>
-<label x="160.02" y="2.54" size="1.27" layer="95" xref="yes"/>
+<wire x1="139.7" y1="0" x2="142.24" y2="0" width="0.1524" layer="91"/>
+<label x="142.24" y="0" size="1.778" layer="95" xref="yes"/>
 </segment>
 <segment>
 <pinref part="U1" gate="G$1" pin="IO23"/>
@@ -10039,11 +10027,23 @@ que contém o CI LoRa SX1276/78, do mesmo fabricante.</description>
 <label x="149.86" y="109.22" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
+<net name="MISO" class="0">
+<segment>
+<pinref part="U$2" gate="G$1" pin="MISO"/>
+<wire x1="139.7" y1="-5.08" x2="142.24" y2="-5.08" width="0.1524" layer="91"/>
+<label x="142.24" y="-5.08" size="1.778" layer="95" xref="yes"/>
+</segment>
+<segment>
+<pinref part="U1" gate="G$1" pin="IO19"/>
+<wire x1="144.78" y1="93.98" x2="149.86" y2="93.98" width="0.1524" layer="91"/>
+<label x="149.86" y="93.98" size="1.27" layer="95" xref="yes"/>
+</segment>
+</net>
 <net name="CLK" class="0">
 <segment>
 <pinref part="U$2" gate="G$1" pin="SLCK"/>
-<wire x1="157.48" y1="7.62" x2="160.02" y2="7.62" width="0.1524" layer="91"/>
-<label x="160.02" y="7.62" size="1.27" layer="95" xref="yes"/>
+<wire x1="139.7" y1="5.08" x2="142.24" y2="5.08" width="0.1524" layer="91"/>
+<label x="142.24" y="5.08" size="1.778" layer="95" xref="yes"/>
 </segment>
 <segment>
 <pinref part="U1" gate="G$1" pin="IO18"/>
@@ -10054,8 +10054,8 @@ que contém o CI LoRa SX1276/78, do mesmo fabricante.</description>
 <net name="LORA_CS" class="0">
 <segment>
 <pinref part="U$2" gate="G$1" pin="NSS"/>
-<wire x1="157.48" y1="12.7" x2="160.02" y2="12.7" width="0.1524" layer="91"/>
-<label x="160.02" y="12.7" size="1.27" layer="95" xref="yes"/>
+<wire x1="139.7" y1="10.16" x2="142.24" y2="10.16" width="0.1524" layer="91"/>
+<label x="142.24" y="10.16" size="1.778" layer="95" xref="yes"/>
 </segment>
 <segment>
 <pinref part="U1" gate="G$1" pin="IO5"/>
@@ -10063,21 +10063,48 @@ que contém o CI LoRa SX1276/78, do mesmo fabricante.</description>
 <label x="149.86" y="88.9" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
-<net name="N$12" class="0">
+<net name="DIO0" class="0">
 <segment>
 <pinref part="U$2" gate="G$1" pin="DIO0"/>
-<wire x1="116.84" y1="2.54" x2="114.3" y2="2.54" width="0.1524" layer="91"/>
+<wire x1="99.06" y1="0" x2="96.52" y2="0" width="0.1524" layer="91"/>
+<label x="96.52" y="0" size="1.778" layer="95" rot="R180" xref="yes"/>
+</segment>
+<segment>
+<pinref part="U1" gate="G$1" pin="IO16"/>
+<wire x1="144.78" y1="83.82" x2="149.86" y2="83.82" width="0.1524" layer="91"/>
+<label x="149.86" y="83.82" size="1.27" layer="95" xref="yes"/>
 </segment>
 </net>
-<net name="N$13" class="0">
+<net name="N$12" class="0">
+<segment>
+<pinref part="U1" gate="G$1" pin="IO2"/>
+<wire x1="144.78" y1="73.66" x2="147.32" y2="73.66" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="LORA_RST" class="0">
+<segment>
+<pinref part="U1" gate="G$1" pin="IO17"/>
+<wire x1="144.78" y1="86.36" x2="149.86" y2="86.36" width="0.1524" layer="91"/>
+<label x="149.86" y="86.36" size="1.27" layer="95" xref="yes"/>
+</segment>
 <segment>
 <pinref part="U$2" gate="G$1" pin="REST"/>
-<wire x1="116.84" y1="7.62" x2="114.3" y2="7.62" width="0.1524" layer="91"/>
+<wire x1="99.06" y1="5.08" x2="96.52" y2="5.08" width="0.1524" layer="91"/>
+<label x="96.52" y="5.08" size="1.778" layer="95" rot="R180" xref="yes"/>
 </segment>
 </net>
 </nets>
 </sheet>
 </sheets>
+<errors>
+<approved hash="104,1,45.72,106.68,U2,VCC,3V3,,,"/>
+<approved hash="104,1,45.72,66.04,U3,VCC,3V3,,,"/>
+<approved hash="104,1,236.22,83.82,IC1,VDD,3V3,,,"/>
+<approved hash="104,1,266.7,83.82,IC1,VDDIO,3V3,,,"/>
+<approved hash="113,1,-45.72,106.385,BOOT,,,,,"/>
+<approved hash="113,1,-45.72,65.7454,RST,,,,,"/>
+<approved hash="113,1,-46.3973,-1.19634,J1,,,,,"/>
+</errors>
 </schematic>
 </drawing>
 <compatibility>

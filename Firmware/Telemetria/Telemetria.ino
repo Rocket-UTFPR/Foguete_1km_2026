@@ -56,6 +56,9 @@ Convenções para nomes de arquivos:
 #define LORA_DIO0 26
 #define GPS_RX 17 // RX do ESP, TX do GPS
 #define GPS_TX 4 // TX do ESP, RX da GPS
+#define PIN_PARAQUEDES 18
+
+
 
 #define ERROR_LOG(msg) \
    do{ \
@@ -76,7 +79,7 @@ struct dadosTelemetria{
           longitude;
   bool newGpsData;
 };
-
+typedef enum {fEtapa1, fEtapa2, fEtapa3} EtapasVoo;
 TaskHandle_t th_captacaoDados = NULL,
              th_transmissaoDados = NULL;
 QueueHandle_t qh_dadosAltitude = NULL;
@@ -90,17 +93,20 @@ void setup() {
 
   Serial.begin(115200);
 
+  pinMode(PIN_PARAQUEDES, OUTPUT);
+  digitalWrite(PIN_PARAQUEDES, LOW);
+
   gpsSerial.begin(9600, SERIAL_8N1, GPS_RX, GPS_TX);
 
-  if(!bmp.begin(0x76)) ERROR_LOG("Erro: BMP não iniciado");
-  else{
-    bmp.setSampling(Adafruit_BMP280::MODE_NORMAL, // modo de operação
-                  Adafruit_BMP280::SAMPLING_X2, // temperatura
-                  Adafruit_BMP280::SAMPLING_X16, // pressão
-                  Adafruit_BMP280::FILTER_X16, //filtro de correção de dados
-                  Adafruit_BMP280::STANDBY_MS_1);
-    altIni = bmp.readAltitude(1013.25);
-  }
+if(!bmp.begin(0x76)) ERROR_LOG("Erro: BMP não iniciado");
+else{
+  bmp.setSampling(Adafruit_BMP280::MODE_NORMAL, // modo de operação
+                Adafruit_BMP280::SAMPLING_X2, // temperatura
+                Adafruit_BMP280::SAMPLING_X16, // pressão
+                Adafruit_BMP280::FILTER_X16, //filtro de correção de dados
+                Adafruit_BMP280::STANDBY_MS_1);
+  altIni = bmp.readAltitude(1013.25);
+}
   if(!SD_MMC.begin()){ ERROR_LOG("Erro: cartão SD não iniciado"); }
   arquivo = SD_MMC.open("/flight.txt", FILE_WRITE);
 
@@ -160,10 +166,46 @@ void loop() {
 void t_captacaoDados(void *pvParameters){
   dadosTelemetria dados = {};
   BaseType_t xDadosFilaEnviados = pdFALSE;
-
+  float altitudeAnterior = 0;
+  bool fParaquedasAberto = false;
+  EtapasVoo etapaVoo = fEtapa1;
+  int contadorQueda = 0;
+  int contadorAbaixoMaximo = 0;
+  int contadorReset = 0;
   while(1){
     dados.altitude = bmp.readAltitude(1013.25) - altIni;
-    
+
+    if((dados.altitude > 1000.0f) &&((etapaVoo == fEtapa1) ){
+      etapaVoo = fEtapa2;
+      Serial.println("Altura de subida acima de 1000 m. Iniciando verificacao de queda.");
+    }
+
+    if((dados.altitude < altitudeAnterior) && (etapaVoo == fEtapa2)){
+      contadorQueda++;
+      contadorReset = 0;
+    } else {
+      contadorReset++;
+      if(contadorReset == 3){
+        contadorQueda = 0;
+      }
+    }
+
+    if((contadorQueda == 10) && (etapaVoo == fEtapa2)){
+      etapaVoo = fEtapa3;
+      Serial.println("Queda confirmada.");
+    }
+
+    if((dados.altitude <= 1000.0f) && (etapaVoo == fEtapa3) && (dados.altitude != 0.0f)){
+      contadorAbaixoMaximo++;
+    }
+
+    if((contadorAbaixoMaximo == 2) && (etapaVoo == fEtapa3) && !fParaquedasAberto){
+      digitalWrite(PIN_PARAQUEDES, HIGH);
+      fParaquedasAberto = true;
+      Serial.println("Paraquedas aberto.");
+    }
+
+    altitudeAnterior = dados.altitude;
     dados.newGpsData = false;
 
     while(gpsSerial.available()){

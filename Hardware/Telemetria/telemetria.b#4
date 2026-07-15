@@ -1384,7 +1384,7 @@ design rules under a new name.</description>
 <signal name="MOSI">
 <contactref element="U$2" pad="MOSI"/>
 <contactref element="U1" pad="37"/>
-<wire x1="68.32" y1="51.78" x2="54.97" y2="56.53" width="0" layer="19" extent="1-1"/>
+<wire x1="54.97" y1="56.53" x2="68.32" y2="51.78" width="0" layer="19" extent="1-1"/>
 </signal>
 <signal name="MISO">
 <contactref element="U$2" pad="MISO"/>

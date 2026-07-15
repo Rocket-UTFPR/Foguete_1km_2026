@@ -18617,6 +18617,7 @@ Es handelt sich hierbei um AK500 in horizontaler Ausführung.</description>
 <part name="P+2" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="+12V" device=""/>
 <part name="SUPPLY33" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="FRAME2" library="frames" library_urn="urn:adsk.eagle:library:229" deviceset="FRAME_B_L" device=""/>
+<part name="C18" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="C-US" device="C3216" package3d_urn="urn:adsk.eagle:package:6240328/1" value="22u"/>
 </parts>
 <sheets>
 <sheet>
@@ -19032,6 +19033,10 @@ Es handelt sich hierbei um AK500 in horizontaler Ausführung.</description>
 <attribute name="SHEET" x="337.82" y="-138.43" size="2.54" layer="94"/>
 <attribute name="DRAWING_NAME" x="269.24" y="-120.65" size="2.54" layer="94"/>
 </instance>
+<instance part="C18" gate="G$1" x="167.64" y="-12.7" smashed="yes" rot="R180">
+<attribute name="NAME" x="171.704" y="-18.415" size="1.778" layer="95" rot="R180"/>
+<attribute name="VALUE" x="166.624" y="-8.509" size="1.778" layer="96" rot="R180"/>
+</instance>
 </instances>
 <busses>
 </busses>
@@ -19248,10 +19253,14 @@ Es handelt sich hierbei um AK500 in horizontaler Ausführung.</description>
 <wire x1="137.16" y1="-12.7" x2="152.4" y2="-12.7" width="0.1524" layer="91"/>
 <wire x1="152.4" y1="-12.7" x2="152.4" y2="-2.54" width="0.1524" layer="91"/>
 <wire x1="152.4" y1="-2.54" x2="160.02" y2="-2.54" width="0.1524" layer="91"/>
-<wire x1="160.02" y1="-2.54" x2="170.18" y2="-2.54" width="0.1524" layer="91"/>
+<wire x1="160.02" y1="-2.54" x2="167.64" y2="-2.54" width="0.1524" layer="91"/>
+<wire x1="167.64" y1="-2.54" x2="170.18" y2="-2.54" width="0.1524" layer="91"/>
 <wire x1="160.02" y1="-7.62" x2="160.02" y2="-2.54" width="0.1524" layer="91"/>
 <junction x="160.02" y="-2.54"/>
 <pinref part="SUPPLY18" gate="GND" pin="GND"/>
+<pinref part="C18" gate="G$1" pin="2"/>
+<wire x1="167.64" y1="-2.54" x2="167.64" y2="-7.62" width="0.1524" layer="91"/>
+<junction x="167.64" y="-2.54"/>
 </segment>
 <segment>
 <pinref part="U$3" gate="G$1" pin="GND1"/>
@@ -19853,6 +19862,9 @@ Es handelt sich hierbei um AK500 in horizontaler Ausführung.</description>
 <pinref part="SJ3" gate="1" pin="1"/>
 <wire x1="160.02" y1="-17.78" x2="160.02" y2="-20.32" width="0.1524" layer="91"/>
 <junction x="160.02" y="-17.78"/>
+<pinref part="C18" gate="G$1" pin="1"/>
+<wire x1="167.64" y1="-15.24" x2="167.64" y2="-17.78" width="0.1524" layer="91"/>
+<wire x1="167.64" y1="-17.78" x2="160.02" y2="-17.78" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="VDD" class="0">

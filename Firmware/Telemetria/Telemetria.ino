@@ -52,11 +52,11 @@ Convenções para nomes de arquivos:
 #include "FS.h"
 
 #define LORA_SS 5 
-#define LORA_RST 16
-#define LORA_DIO0 26
-#define GPS_RX 17 // RX do ESP, TX do GPS
-#define GPS_TX 4 // TX do ESP, RX da GPS
-#define PIN_PARAQUEDES 18
+#define LORA_RST 17
+#define LORA_DIO0 16
+#define GPS_RX 33 // RX do ESP, TX do GPS
+#define GPS_TX 32 // TX do ESP, RX da GPS
+#define PIN_PARAQUEDAS 12
 
 
 
@@ -71,30 +71,40 @@ TinyGPSPlus gps;
 HardwareSerial gpsSerial(2);
 
 uint32_t pacotesPerdidos = 0;
-float altIni = 0;
+float altIni = 0,
+      altAtual = 0,
+      altAnterior = 0;
+
+enum {
+  SOLO,
+  VOO,
+  QUEDA,
+  PARAQUEDAS
+} EtapasVoo;
 
 struct dadosTelemetria{
   float altitude;
   double latitude,
-          longitude;
+         longitude;
   bool newGpsData;
 };
-typedef enum {fEtapa1, fEtapa2, fEtapa3} EtapasVoo;
-TaskHandle_t th_captacaoDados = NULL,
-             th_transmissaoDados = NULL;
-QueueHandle_t qh_dadosAltitude = NULL;
-//Todo: queue do GPS depois de adicionar o módulo
 
-void t_captacaoDados(void);
-void t_transmissaoDados(void);
+TaskHandle_t th_captacaoDados = NULL,
+             th_transmissaoDados = NULL,
+             th_ejecao = NULL;
+QueueHandle_t qh_dadosAltitude = NULL;
+
+void t_captacaoDados(void *pvParameters);
+void t_transmissaoDados(void *pvParameters);
+void t_ejecao(void *pvParameters);
 
 void setup() {
   File arquivo = File();
 
   Serial.begin(115200);
 
-  pinMode(PIN_PARAQUEDES, OUTPUT);
-  digitalWrite(PIN_PARAQUEDES, LOW);
+  pinMode(PIN_PARAQUEDAS, OUTPUT);
+  digitalWrite(PIN_PARAQUEDAS, HIGH);
 
   gpsSerial.begin(9600, SERIAL_8N1, GPS_RX, GPS_TX);
 
@@ -155,59 +165,37 @@ else{
   ) == pdFALSE){ 
     ERROR_LOG("Erro: task \'Trasmissao de dados\' não iniciada");
   }
+
+  if(xTaskCreatePinnedToCore(
+    t_ejecao,
+    "Ejeção do paraquedas",
+    2000,
+    NULL,
+    2,
+    &th_ejecao,
+    tskNO_AFFINITY
+  ) == pdFALSE){ 
+    ERROR_LOG("Erro: task \'Ejeção do paraquedas\' não iniciada"); 
+  }
 }
 
 void loop() {
-  
+  vTaskDelete(NULL);
 }
 
 /*** Declaração de tasks ***/
 
 void t_captacaoDados(void *pvParameters){
-  dadosTelemetria dados = {};
+  struct dadosTelemetria dados = {};
   BaseType_t xDadosFilaEnviados = pdFALSE;
-  float altitudeAnterior = 0;
-  bool fParaquedasAberto = false;
-  EtapasVoo etapaVoo = fEtapa1;
-  int contadorQueda = 0;
-  int contadorAbaixoMaximo = 0;
-  int contadorReset = 0;
+  
+
   while(1){
     dados.altitude = bmp.readAltitude(1013.25) - altIni;
-
-    if((dados.altitude > 1000.0f) &&((etapaVoo == fEtapa1) ){
-      etapaVoo = fEtapa2;
-      Serial.println("Altura de subida acima de 1000 m. Iniciando verificacao de queda.");
-    }
-
-    if((dados.altitude < altitudeAnterior) && (etapaVoo == fEtapa2)){
-      contadorQueda++;
-      contadorReset = 0;
-    } else {
-      contadorReset++;
-      if(contadorReset == 3){
-        contadorQueda = 0;
-      }
-    }
-
-    if((contadorQueda == 10) && (etapaVoo == fEtapa2)){
-      etapaVoo = fEtapa3;
-      Serial.println("Queda confirmada.");
-    }
-
-    if((dados.altitude <= 1000.0f) && (etapaVoo == fEtapa3) && (dados.altitude != 0.0f)){
-      contadorAbaixoMaximo++;
-    }
-
-    if((contadorAbaixoMaximo == 2) && (etapaVoo == fEtapa3) && !fParaquedasAberto){
-      digitalWrite(PIN_PARAQUEDES, HIGH);
-      fParaquedasAberto = true;
-      Serial.println("Paraquedas aberto.");
-    }
-
-    altitudeAnterior = dados.altitude;
     dados.newGpsData = false;
-
+    altAnterior = altAtual;
+    altAtual = dados.altitude;
+    
     while(gpsSerial.available()){
       Serial.println("porta recebeu");
       if(gps.encode(gpsSerial.read())){
@@ -231,7 +219,7 @@ void t_captacaoDados(void *pvParameters){
 
 void t_transmissaoDados(void *pvParameters){
   uint8_t fLoraDisponivel = 0;
-  dadosTelemetria dados;
+  struct dadosTelemetria dados = {};
   BaseType_t xDadosFilaRecebidos = pdFALSE;
   String payloadTelemetria = "";
   File arquivo = File();
@@ -266,4 +254,35 @@ void t_transmissaoDados(void *pvParameters){
       }
     }
   }
+}
+
+ // Função de Ejeção do Paraquedas
+void t_ejecao (void *pvParameters){
+  while(1){
+    switch (EtapasVoo) {
+    case SOLO:
+      if (altAtual > 50) EtapasVoo = VOO;
+
+      break;
+
+    case VOO:
+
+      break;
+
+    case QUEDA:
+
+      break;
+
+    case PARAQUEDAS:
+
+      break;
+    
+    default:
+
+      break;
+  }
+
+
+  }
+  
 }

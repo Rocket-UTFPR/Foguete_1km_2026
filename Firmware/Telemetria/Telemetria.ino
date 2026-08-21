@@ -222,7 +222,7 @@ void t_transmissaoDados(void *pvParameters){
   struct dadosTelemetria dados = {};
   BaseType_t xDadosFilaRecebidos = pdFALSE;
   String payloadTelemetria = "";
-  File arquivo = File();
+  File arquivo = SD_MMC.open("/flight.txt", FILE_APPEND);
 
   while(1){
     xDadosFilaRecebidos = xQueueReceive(qh_dadosAltitude, &dados, portMAX_DELAY);
@@ -235,11 +235,15 @@ void t_transmissaoDados(void *pvParameters){
                           + String(dados.latitude) + ";"
                           + String(dados.longitude) + ";"
                           + String(pacotesPerdidos);
-    arquivo = SD_MMC.open("/flight.txt", FILE_APPEND);
+
 
       if(arquivo){
         arquivo.println(payloadTelemetria);
-        arquivo.close();
+        arquivo.flush();
+
+        if (EtapasVoo == SOLO && digitalRead(PIN_PARAQUEDAS) == LOW) {
+          arquivo.close();
+        }
       }else{
         Serial.println("Erro: arquivo não aberto");
       }
@@ -258,6 +262,10 @@ void t_transmissaoDados(void *pvParameters){
 
  // Função de Ejeção do Paraquedas
 void t_ejecao (void *pvParameters){
+
+  int contQueda = 0;
+  int contRuido = 0;
+
   while(1){
     switch (EtapasVoo) {
     case SOLO:
@@ -266,23 +274,32 @@ void t_ejecao (void *pvParameters){
       break;
 
     case VOO:
+      contQueda = 0;
+      contRuido = 0;
+      if (altAtual < altAnterior) EtapasVoo = QUEDA;
 
       break;
 
     case QUEDA:
+      while (altAtual < altAnterior){
+        contQueda++;
+      }
+      contRuido++;
 
+      if (contRuido >= 3) EtapasVoo = VOO;
+      if (contQueda >= 9) EtapasVoo = PARAQUEDAS;
       break;
 
     case PARAQUEDAS:
-
+      digitalWrite(PIN_PARAQUEDAS, LOW);
+      if (altAtual < 50) EtapasVoo = SOLO;
       break;
     
     default:
-
+      ERROR_LOG("Estado não esperado na ejeção do paraquedas");
       break;
+    
+    vTaskDelay(pdMS_TO_TICKS(20));
+    }
   }
-
-
-  }
-  
 }

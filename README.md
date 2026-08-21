@@ -54,3 +54,10 @@ Requisitos Funcionais
 - Diâmetro (máximo): 98mm
 - Comprimento (máximo): 230mm
 
+# 3. Bugs conhecidos
+
+- No esquemático, a trilha VBUS do USB está conectada à trilha 3V3. A alimentação padrão do USB é de 5V, esse curto-circuito queimaria os componentes da placa;
+- Correção: trilhas de VBUS raspadas na versão de voo, jumpeadas para entrada do buck
+
+- No .brd, o sinal diferencial do USB não está roteado corretamente.
+- Correção: trilhas jumpeadas com par trançado

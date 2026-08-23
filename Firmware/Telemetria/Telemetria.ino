@@ -59,11 +59,11 @@ Convenções para nomes de arquivos:
 #define PIN_PARAQUEDAS 12
 
 
-
 #define ERROR_LOG(msg) \
    do{ \
     Serial.println(msg); \
    } while(0) //Do-while para evitar bugs
+
 
 Adafruit_BMP280 bmp = Adafruit_BMP280();
 SPIClass lora_spi(VSPI);
@@ -75,12 +75,12 @@ float altIni = 0,
       altAtual = 0,
       altAnterior = 0;
 
-enum {
+enum class EtapasVoo{
   SOLO,
   VOO,
   QUEDA,
   PARAQUEDAS
-} EtapasVoo;
+} volatile EtapasVoo etapaAtual = EtapasVoo::SOLO;
 
 struct dadosTelemetria{
   float altitude;
@@ -241,7 +241,7 @@ void t_transmissaoDados(void *pvParameters){
         arquivo.println(payloadTelemetria);
         arquivo.flush();
 
-        if (EtapasVoo == SOLO && digitalRead(PIN_PARAQUEDAS) == LOW) {
+        if ((etapaAtual == EtapasVoo:: SOLO) && (digitalRead(PIN_PARAQUEDAS) == LOW)) {
           arquivo.close();
         }
       }else{
@@ -267,39 +267,38 @@ void t_ejecao (void *pvParameters){
   int contRuido = 0;
 
   while(1){
-    switch (EtapasVoo) {
-    case SOLO:
-      if (altAtual > 50) EtapasVoo = VOO;
+    switch (etapaAtual) {
+    case EtapasVoo:: SOLO:
+      if (altAtual > 50) etapaAtual = EtapasVoo:: VOO;
 
       break;
 
-    case VOO:
+    case EtapasVoo:: VOO:
       contQueda = 0;
       contRuido = 0;
-      if (altAtual < altAnterior) EtapasVoo = QUEDA;
+      if (altAtual < altAnterior) etapaAtual = EtapasVoo:: QUEDA;
 
       break;
 
-    case QUEDA:
+    case EtapasVoo:: QUEDA:
       while (altAtual < altAnterior){
         contQueda++;
       }
       contRuido++;
 
-      if (contRuido >= 3) EtapasVoo = VOO;
-      if (contQueda >= 9) EtapasVoo = PARAQUEDAS;
+      if (contRuido >= 3) etapaAtual = EtapasVoo:: VOO;
+      if (contQueda >= 9) etapaAtual = EtapasVoo:: PARAQUEDAS;
       break;
 
-    case PARAQUEDAS:
+    case EtapasVoo:: PARAQUEDAS:
       digitalWrite(PIN_PARAQUEDAS, LOW);
-      if (altAtual < 50) EtapasVoo = SOLO;
+      if (altAtual < 50) etapaAtual = EtapasVoo:: SOLO;
       break;
     
     default:
       ERROR_LOG("Estado não esperado na ejeção do paraquedas");
       break;
-    
-    vTaskDelay(pdMS_TO_TICKS(20));
     }
+    vTaskDelay(pdMS_TO_TICKS(20));
   }
 }

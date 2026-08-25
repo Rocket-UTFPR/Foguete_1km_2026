@@ -71,9 +71,9 @@ TinyGPSPlus gps;
 HardwareSerial gpsSerial(2);
 
 uint32_t pacotesPerdidos = 0;
-float altIni = 0,
-      altAtual = 0,
-      altAnterior = 0;
+float altIni = 0;
+volatile float altAtual = 0,
+               altAnterior = 0;
 
 enum class EtapasVoo{
   SOLO,
@@ -108,17 +108,18 @@ void setup() {
 
   gpsSerial.begin(9600, SERIAL_8N1, GPS_RX, GPS_TX);
 
-if(!bmp.begin(0x76)) ERROR_LOG("Erro: BMP não iniciado");
-else{
-  bmp.setSampling(Adafruit_BMP280::MODE_NORMAL, // modo de operação
-                Adafruit_BMP280::SAMPLING_X2, // temperatura
-                Adafruit_BMP280::SAMPLING_X16, // pressão
-                Adafruit_BMP280::FILTER_X16, //filtro de correção de dados
-                Adafruit_BMP280::STANDBY_MS_1);
-  altIni = bmp.readAltitude(1013.25);
-}
+  if(!bmp.begin(0x76)) ERROR_LOG("Erro: BMP não iniciado");
+  else{
+    bmp.setSampling(Adafruit_BMP280::MODE_NORMAL, // modo de operação
+                  Adafruit_BMP280::SAMPLING_X2, // temperatura
+                  Adafruit_BMP280::SAMPLING_X16, // pressão
+                  Adafruit_BMP280::FILTER_X16, //filtro de correção de dados
+                  Adafruit_BMP280::STANDBY_MS_1);
+    altIni = bmp.readAltitude(1013.25);
+  }
   if(!SD_MMC.begin()){ ERROR_LOG("Erro: cartão SD não iniciado"); }
   arquivo = SD_MMC.open("/flight.txt", FILE_WRITE);
+  arquivo.close();
 
   if(!arquivo){ ERROR_LOG("Erro: arquivo não aberto");}
 

@@ -114,7 +114,7 @@ void setup() {
                   Adafruit_BMP280::SAMPLING_X2, // temperatura
                   Adafruit_BMP280::SAMPLING_X16, // pressão
                   Adafruit_BMP280::FILTER_X16, //filtro de correção de dados
-                  Adafruit_BMP280::STANDBY_MS_1);
+                  Adafruit_BMP280::STANDBY_MS_3);
     altIni = bmp.readAltitude(1013.25);
   }
   if(!SD_MMC.begin()){ ERROR_LOG("Erro: cartão SD não iniciado"); }
@@ -141,7 +141,7 @@ void setup() {
   LoRa.setSpreadingFactor(11);
   LoRa.setSignalBandwidth(62.5e3);
 
-  qh_dadosAltitude = xQueueCreate(1024, sizeof(dadosTelemetria));
+  qh_dadosAltitude = xQueueCreate(2048, sizeof(dadosTelemetria));
 
   if(xTaskCreatePinnedToCore(
     t_captacaoDados,
@@ -210,7 +210,7 @@ void t_captacaoDados(void *pvParameters){
       }
     }
 
-    xDadosFilaEnviados = xQueueSend(qh_dadosAltitude, &dados, portMAX_DELAY);
+    xDadosFilaEnviados = xQueueSend(qh_dadosAltitude, &dados, pdMS_TO_TICKS(5));
 
     if(xDadosFilaEnviados == pdFALSE) pacotesPerdidos++;
 
@@ -269,35 +269,38 @@ void t_ejecao (void *pvParameters){
 
   while(1){
     switch (etapaAtual) {
-    case EtapasVoo:: SOLO:
-      if (altAtual > 50) etapaAtual = EtapasVoo:: VOO;
+    case EtapasVoo::SOLO:
+      if (altAtual > 120) etapaAtual = EtapasVoo::VOO;
 
       break;
 
-    case EtapasVoo:: VOO:
+    case EtapasVoo::VOO:
       contQueda = 0;
       contRuido = 0;
-      if (altAtual < altAnterior) etapaAtual = EtapasVoo:: QUEDA;
+      if (altAtual < altAnterior) etapaAtual = EtapasVoo::QUEDA;
 
       break;
 
     case EtapasVoo:: QUEDA:
       while (altAtual < altAnterior){
         contQueda++;
+
+        if(contQueda >= 9) break;
       }
       contRuido++;
 
-      if (contRuido >= 3) etapaAtual = EtapasVoo:: VOO;
-      if (contQueda >= 9) etapaAtual = EtapasVoo:: PARAQUEDAS;
+      if (contRuido >= 3) etapaAtual = EtapasVoo::VOO;
+      if (contQueda >= 9) etapaAtual = EtapasVoo::PARAQUEDAS;
       break;
 
-    case EtapasVoo:: PARAQUEDAS:
+    case EtapasVoo::PARAQUEDAS:
       digitalWrite(PIN_PARAQUEDAS, LOW);
-      if (altAtual < 50) etapaAtual = EtapasVoo:: SOLO;
+      if (altAtual < 120) etapaAtual = EtapasVoo::SOLO;
       break;
     
     default:
       ERROR_LOG("Estado não esperado na ejeção do paraquedas");
+      etapaAtual = EtapasVoo::SOLO;
       break;
     }
     vTaskDelay(pdMS_TO_TICKS(20));

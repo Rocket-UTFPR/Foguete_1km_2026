@@ -235,8 +235,8 @@ void t_transmissaoDados(void *pvParameters){
 
     if(xDadosFilaRecebidos == pdTRUE){
       payloadTelemetria = String(dados.altitude) + ";" 
-                          + String(dados.latitude) + ";"
-                          + String(dados.longitude) + ";"
+                          + String(dados.latitude, 6) + ";"
+                          + String(dados.longitude, 6) + ";"
                           + String(pacotesPerdidos) + ";"
                           + String(dados.newGpsData) + ";"
                           + String(dados.uptime);

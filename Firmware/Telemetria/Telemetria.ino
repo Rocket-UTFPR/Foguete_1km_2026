@@ -87,6 +87,7 @@ struct dadosTelemetria{
   double latitude,
          longitude;
   bool newGpsData;
+  unsigned long uptime;
 };
 
 TaskHandle_t th_captacaoDados = NULL,
@@ -192,6 +193,7 @@ void t_captacaoDados(void *pvParameters){
   
 
   while(1){
+    dados.uptime = millis();
     dados.altitude = bmp.readAltitude(1013.25) - altIni;
     dados.newGpsData = false;
     altAnterior = altAtual;
@@ -235,8 +237,9 @@ void t_transmissaoDados(void *pvParameters){
       payloadTelemetria = String(dados.altitude) + ";" 
                           + String(dados.latitude) + ";"
                           + String(dados.longitude) + ";"
-                          + String(pacotesPerdidos);
-
+                          + String(pacotesPerdidos) + ";"
+                          + String(dados.newGpsData) + ";"
+                          + String(dados.uptime);
 
       if(arquivo){
         arquivo.println(payloadTelemetria);

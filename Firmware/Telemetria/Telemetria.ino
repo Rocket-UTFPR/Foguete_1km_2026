@@ -191,6 +191,8 @@ void loop() {
 void t_captacaoDados(void *pvParameters){
   struct dadosTelemetria dados = {};
   BaseType_t xDadosFilaEnviados = pdFALSE;
+  String payloadTelemetria = ""; 
+  File arquivo = SD_MMC.open("/flight.txt", FILE_APPEND);
   
 
   while(1){
@@ -199,6 +201,27 @@ void t_captacaoDados(void *pvParameters){
     //dados.newGpsData = false;
     altAnterior = altAtual;
     altAtual = dados.altitude;
+
+    payloadTelemetria = String(dados.altitude) + ";" 
+                      //+ String(dados.latitude, 6) + ";"
+                      //+ String(dados.longitude, 6) + ";"
+                      //+ String(pacotesPerdidos) + ";"
+                      //+ String(dados.newGpsData) + ";"
+                      + String(dados.uptime) +
+                      ("\0");
+    
+    if(arquivo){
+      arquivo.println(payloadTelemetria);
+      arquivo.flush();
+      Serial.println("Gravou no SD..");
+
+      if ((etapaAtual == EtapasVoo::SOLO) && (digitalRead(PIN_PARAQUEDAS) == LOW)) {
+        arquivo.close();
+      }
+    } else {
+      Serial.println("Erro: arquivo não aberto no SD");
+    }
+    
     /*
     while(gpsSerial.available()){
       Serial.println("porta recebeu");
@@ -226,7 +249,6 @@ void t_transmissaoDados(void *pvParameters){
   struct dadosTelemetria dados = {};
   BaseType_t xDadosFilaRecebidos = pdFALSE;
   String payloadTelemetria = "";
-  File arquivo = SD_MMC.open("/flight.txt", FILE_APPEND);
 
   while(1){
     xDadosFilaRecebidos = xQueueReceive(qh_dadosAltitude, &dados, portMAX_DELAY);
@@ -242,19 +264,6 @@ void t_transmissaoDados(void *pvParameters){
                           //+ String(dados.newGpsData) + ";"
                           + String(dados.uptime) +
                           ("\0");
-
-      if(arquivo){
-        arquivo.println(payloadTelemetria);
-        //arquivo.close();
-        arquivo.flush();
-
-        Serial.println("Gravou.");
-        if ((etapaAtual == EtapasVoo:: SOLO) && (digitalRead(PIN_PARAQUEDAS) == LOW)) {
-          arquivo.close();
-        }
-      }else{
-        Serial.println("Erro: arquivo não aberto");
-      }
 
       fLoraDisponivel = LoRa.beginPacket();
       

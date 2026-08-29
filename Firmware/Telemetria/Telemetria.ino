@@ -48,15 +48,14 @@ Convenções para nomes de arquivos:
 #include <Adafruit_BMP280.h>
 #include <LoRa.h>
 #include <TinyGPSPlus.h>
-#include "SD_MMC.h"
-#include "FS.h"
+#include <SD_MMC.h>
 
 #define LORA_SS 5 
 #define LORA_RST 17
 #define LORA_DIO0 16
 #define GPS_RX 33 // RX do ESP, TX do GPS
 #define GPS_TX 32 // TX do ESP, RX da GPS
-#define PIN_PARAQUEDAS 12
+#define PIN_PARAQUEDAS 27
 
 
 #define ERROR_LOG(msg) \
@@ -80,13 +79,14 @@ enum class EtapasVoo{
   VOO,
   QUEDA,
   PARAQUEDAS
-} volatile EtapasVoo etapaAtual = EtapasVoo::SOLO;
+};
+volatile EtapasVoo etapaAtual = EtapasVoo::SOLO;
 
 struct dadosTelemetria{
   float altitude;
-  double latitude,
-         longitude;
-  bool newGpsData;
+  //double latitude,
+  //       longitude;
+  //bool newGpsData;
   unsigned long uptime;
 };
 
@@ -107,7 +107,7 @@ void setup() {
   pinMode(PIN_PARAQUEDAS, OUTPUT);
   digitalWrite(PIN_PARAQUEDAS, HIGH);
 
-  gpsSerial.begin(9600, SERIAL_8N1, GPS_RX, GPS_TX);
+  //gpsSerial.begin(9600, SERIAL_8N1, GPS_RX, GPS_TX);
 
   if(!bmp.begin(0x76)) ERROR_LOG("Erro: BMP não iniciado");
   else{
@@ -115,14 +115,15 @@ void setup() {
                   Adafruit_BMP280::SAMPLING_X2, // temperatura
                   Adafruit_BMP280::SAMPLING_X16, // pressão
                   Adafruit_BMP280::FILTER_X16, //filtro de correção de dados
-                  Adafruit_BMP280::STANDBY_MS_3);
+                  Adafruit_BMP280::STANDBY_MS_1);
     altIni = bmp.readAltitude(1013.25);
   }
   if(!SD_MMC.begin()){ ERROR_LOG("Erro: cartão SD não iniciado"); }
   arquivo = SD_MMC.open("/flight.txt", FILE_WRITE);
+  if(!arquivo){ ERROR_LOG("Erro: arquivo não aberto");}
   arquivo.close();
 
-  if(!arquivo){ ERROR_LOG("Erro: arquivo não aberto");}
+
 
   /*************************** Tabela de alcance LoRa (empírica) ***************************
   SF | BW (kHZ) | Velocidade aproximada (kbps) | Alcance campo aberto | Alcance urbano
@@ -195,10 +196,10 @@ void t_captacaoDados(void *pvParameters){
   while(1){
     dados.uptime = millis();
     dados.altitude = bmp.readAltitude(1013.25) - altIni;
-    dados.newGpsData = false;
+    //dados.newGpsData = false;
     altAnterior = altAtual;
     altAtual = dados.altitude;
-    
+    /*
     while(gpsSerial.available()){
       Serial.println("porta recebeu");
       if(gps.encode(gpsSerial.read())){
@@ -210,7 +211,7 @@ void t_captacaoDados(void *pvParameters){
           dados.newGpsData = true;
         }
       }
-    }
+    }*/
 
     xDadosFilaEnviados = xQueueSend(qh_dadosAltitude, &dados, pdMS_TO_TICKS(5));
 
@@ -229,22 +230,25 @@ void t_transmissaoDados(void *pvParameters){
 
   while(1){
     xDadosFilaRecebidos = xQueueReceive(qh_dadosAltitude, &dados, portMAX_DELAY);
-    Serial.println(dados.altitude);
-    Serial.println(dados.longitude);
-    Serial.println(dados.latitude);
+    Serial.println(altAtual);
+    //Serial.println(dados.longitude);
+    //Serial.println(dados.latitude);
 
     if(xDadosFilaRecebidos == pdTRUE){
       payloadTelemetria = String(dados.altitude) + ";" 
-                          + String(dados.latitude, 6) + ";"
-                          + String(dados.longitude, 6) + ";"
-                          + String(pacotesPerdidos) + ";"
-                          + String(dados.newGpsData) + ";"
-                          + String(dados.uptime);
+                          //+ String(dados.latitude, 6) + ";"
+                          //+ String(dados.longitude, 6) + ";"
+                          //+ String(pacotesPerdidos) + ";"
+                          //+ String(dados.newGpsData) + ";"
+                          + String(dados.uptime) +
+                          ("\0");
 
       if(arquivo){
         arquivo.println(payloadTelemetria);
+        //arquivo.close();
         arquivo.flush();
 
+        Serial.println("Gravou.");
         if ((etapaAtual == EtapasVoo:: SOLO) && (digitalRead(PIN_PARAQUEDAS) == LOW)) {
           arquivo.close();
         }
@@ -255,7 +259,7 @@ void t_transmissaoDados(void *pvParameters){
       fLoraDisponivel = LoRa.beginPacket();
       
       if(fLoraDisponivel == 1){
-        LoRa.println(payloadTelemetria);
+        LoRa.print(payloadTelemetria);
         LoRa.endPacket();
       } else{
         Serial.println("LoRa indisponível");
@@ -273,11 +277,13 @@ void t_ejecao (void *pvParameters){
   while(1){
     switch (etapaAtual) {
     case EtapasVoo::SOLO:
+      Serial.println("SOLO");
       if (altAtual > 120) etapaAtual = EtapasVoo::VOO;
 
       break;
 
     case EtapasVoo::VOO:
+      Serial.println("VOO");
       contQueda = 0;
       contRuido = 0;
       if (altAtual < altAnterior) etapaAtual = EtapasVoo::QUEDA;
@@ -285,12 +291,17 @@ void t_ejecao (void *pvParameters){
       break;
 
     case EtapasVoo:: QUEDA:
-      while (altAtual < altAnterior){
+      Serial.println("QUEDA");
+      if (altAtual < altAnterior){
         contQueda++;
+        Serial.println(contQueda);
 
-        if(contQueda >= 9) break;
+        //if(contQueda >= 9) break;
       }
-      contRuido++;
+      if (altAtual > altAnterior){
+        contRuido++;
+        Serial.println(contRuido);
+      }
 
       if (contRuido >= 3) etapaAtual = EtapasVoo::VOO;
       if (contQueda >= 9) etapaAtual = EtapasVoo::PARAQUEDAS;
@@ -298,6 +309,7 @@ void t_ejecao (void *pvParameters){
 
     case EtapasVoo::PARAQUEDAS:
       digitalWrite(PIN_PARAQUEDAS, LOW);
+      Serial.println("PARAQUEDAS ACIONADO");
       if (altAtual < 120) etapaAtual = EtapasVoo::SOLO;
       break;
     

@@ -4,7 +4,7 @@ Código da placa principal do foguete de 1km para a LASC
 Código para ESP32 Dev Module
 
 Início: 2026/01
-Término: 
+Término: 2026/02
 
 Requisitos implementados:
 
